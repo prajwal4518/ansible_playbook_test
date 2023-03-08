@@ -1,0 +1,59 @@
+- name:
+  hosts:
+  vars_prompt:
+    - name: is_continue
+      prompt: Do you want to continue?
+      private: no
+  tasks:
+    - name: Run 'apt-get update -y'
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install 'libjemalloc'
+      apt: 
+        name: libjemalloc1
+        state: latest
+
+    - name: Check if jemalloc file present
+      shell:
+        cmd: ls -l | grep log
+        chdir: /usr/lib/x86_64-linux-gnu
+      when: is_continue
+
+    - name: Add the environment variable "$LD_PRELOAD"
+      shell:
+        cmd: echo $LD_PRELOAD
+
+    - name:
+      community.mysql.mysql_query:
+        login_user: mydba
+        login_password: {{my_password}}
+        query: SHOW VARIABLES LIKE 'version_malloc_library';
+
+    - name:
+      community.mysql.mysql_query:
+        login_user: mydba
+        login_password: {{my_password}}
+        query: SELECT event_schema, event_name FROM information_schema.events WHERE status='ENABLED' ORDER BY event_schema,event_name;
+
+    - name:
+      community.mysql.mysql_query:
+        login_user: mydba
+        login_password: {{my_password}}
+        query: select process_to_fed,year(created),month(created),day(created),count(*) from tcla_control.`transient_database_command_records_dui` group by year(created),month(created),day(created),process_to_fed;
+
+    - name:
+      community.mysql.mysql_query:
+        login_user: mydba
+        login_password: {{my_password}}
+        query: call logging.min_tb_report_unprocessed();
+
+
+
+
+
+    
+
+    
+    
