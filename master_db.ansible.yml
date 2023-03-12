@@ -1,0 +1,75 @@
+- name: Install MariaDB
+  hosts: all
+  become: true
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Hold openssh packages
+      dpkg_selections:
+        name: openssh-server, openssh-client, openssh-sftp-server
+        selection: hold
+
+    - name: Upgrade system packages
+      apt:
+        upgrade: yes
+
+    - name: Install jq
+      apt:
+        name: jq
+        state: present
+
+    - name: Install required packages for MariaDB
+      apt:
+        name:
+          - software-properties-common
+          - dirmngr
+          - apt-transport-https
+        state: present
+        update_cache: true
+
+    - name: Add MariaDB GPG key
+      apt_key:
+        url: https://mariadb.org/mariadb_release_signing_key.asc
+
+    - name: Add MariaDB repository
+      apt_repository:
+        repo: 'deb [arch=amd64,arm64,ppc64el] https://archive.mariadb.org/mariadb-10.2.21/repo/ubuntu bionic main'
+
+    - name: Set MariaDB root password
+      debconf:
+        name: 'mysql-server'
+        question: 'mysql-server/root_password'
+        value: 'password'
+        vtype: 'password'
+      register: mysql_root_password
+
+    - name: Confirm MariaDB root password
+      debconf:
+        name: 'mysql-server'
+        question: 'mysql-server/root_password_again'
+        value: 'password'
+        vtype: 'password'
+      when: mysql_root_password.changed
+
+    - name: Install MariaDB server
+      apt:
+        name: mariadb-server
+        state: present
+
+    - name: Update my.cnf file
+      copy:
+        src: my.cnf
+        dest: /etc/mysql/my.cnf
+
+    - name: Restart MariaDB service
+      service:
+        name: mariadb
+        state: restarted
+
+    - name: Check MariaDB service status
+      service:
+        name: mariadb
+        state: started
