@@ -7,9 +7,24 @@
       apt:
         update_cache: yes
 
+    - name: Hold openssh-server
+      dpkg_selections:
+        name: openssh-server
+        selection: hold
+
+    - name: Hold openssh-client
+      dpkg_selections:
+        name: openssh-client
+        selection: hold
+  
+    - name: Hold openssh-sftp-server
+      dpkg_selections:
+        name: openssh-sftp-server
+        selection: hold
+
     - name: Hold openssh packages
       dpkg_selections:
-        name: openssh-server, openssh-client, openssh-sftp-server
+        name: openssh-server
         selection: hold
 
     - name: Upgrade system packages
