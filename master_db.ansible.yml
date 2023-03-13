@@ -88,3 +88,36 @@
       service:
         name: mariadb
         state: started
+
+
+    - name: Update MariaDB configuration file
+      lineinfile:
+        path: "{{ CONFIG_FILE }}"
+        regexp: '^bind-address.*'
+        line: 'bind-address = 0.0.0.0'
+        state: present
+        backup: yes
+        validate: '/usr/sbin/mysqld --verbose --help'
+
+    - name: Uncomment server-id option in MariaDB configuration file
+      lineinfile:
+        path: "{{ CONFIG_FILE }}"
+        regexp: '^#server-id.*'
+        line: 'server-id = 1'
+        state: present
+        backup: yes
+        validate: '/usr/sbin/mysqld --verbose --help'
+
+    - name: Uncomment log_bin option in MariaDB configuration file
+      lineinfile:
+        path: "{{ CONFIG_FILE }}"
+        regexp: '^#log_bin.*'
+        line: 'log_bin = /var/log/mysql/mysql-bin.log'
+        state: present
+        backup: yes
+        validate: '/usr/sbin/mysqld --verbose --help'
+
+    - name: Restart MariaDB service
+      service:
+        name: mariadb
+        state: restarted
